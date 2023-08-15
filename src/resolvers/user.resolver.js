@@ -5,7 +5,7 @@ export default {
   DateTime: DateTimeResolver,
   UUID: UUIDResolver,
   Query: {
-    users: async() => {
+    users: async(parent, args, ctx, info) => {
       const users = await userService.getAll();
       return users;
     } 
@@ -15,7 +15,6 @@ export default {
       const user = await userService.signup({ fullName, password, username, email });
       return user;
     }
-
   }
 
 }

@@ -8,13 +8,13 @@ type User {
   password: String!
   username: String!
   email: String!
-  role: String!
+  role: String! 
   createdAt: DateTime
   updatedAt: DateTime
 }
 
 type Query {
-  users: [User!]
+  users: [User!] @auth
 }
 
 type Mutation {

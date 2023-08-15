@@ -1,22 +1,34 @@
 import { ApolloServer } from "@apollo/server";
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { expressMiddleware } from "@apollo/server/express4";
 import express from "express";
 import http from "http";
 import pkg from "body-parser";
+
 const { json } = pkg;
 
-import schema from "./schema/index.js";
+import schema1 from "./schema/index.js";
 import prisma from "./client.js";
+import authMiddleware from "./middlewares/auth.middleware.js";
 import resolvers from './resolvers/index.js';
+import authDirectiveTransformer from './directives/auth.directive.js'
 
 const app = express();
 const httpServer = http.createServer(app);
+const { protect } = authMiddleware;
+
+let schema = makeExecutableSchema({
+  typeDefs: schema1,
+  resolvers,
+});
+
+schema = authDirectiveTransformer(schema);
 
 const server = new ApolloServer({
-  typeDefs: schema,
-  resolvers,
+  schema,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  introspection: true
 });
 
 await server.start();
@@ -31,7 +43,10 @@ app.use(
   "/graphql",
   json(),
   expressMiddleware(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
+    context: async ({ req }) => {
+      const auth = await protect(req);
+      return auth
+    },
   })
 );
 
