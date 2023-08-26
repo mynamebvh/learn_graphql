@@ -14,7 +14,7 @@ type User {
 }
 
 type Query {
-  users: [User!] @auth
+  users: [User!] @auth(role: USER)
 }
 
 type Mutation {

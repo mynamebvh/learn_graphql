@@ -8,7 +8,7 @@ import pkg from "body-parser";
 
 const { json } = pkg;
 
-import schema1 from "./schema/index.js";
+import schema from "./schema/index.js";
 import prisma from "./client.js";
 import authMiddleware from "./middlewares/auth.middleware.js";
 import resolvers from './resolvers/index.js';
@@ -18,15 +18,15 @@ const app = express();
 const httpServer = http.createServer(app);
 const { protect } = authMiddleware;
 
-let schema = makeExecutableSchema({
-  typeDefs: schema1,
+let schemaExec = makeExecutableSchema({
+  typeDefs: schema,
   resolvers,
 });
 
-schema = authDirectiveTransformer(schema);
+schemaExec = authDirectiveTransformer(schemaExec);
 
 const server = new ApolloServer({
-  schema,
+  schema: schemaExec,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   introspection: true
 });

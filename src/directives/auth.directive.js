@@ -18,12 +18,18 @@ function authDirective(directiveName) {
             getDirective(schema, fieldConfig, directiveName)?.[0] ??
             typeDirectiveArgumentMaps[typeName];
           if (authDirective) {
+            const { role } = authDirective
             const { resolve = defaultFieldResolver } = fieldConfig;
             fieldConfig.resolve = function (source, args, context, info) {
-              const { isAuth } = context;
+              const { isAuth, user } = context;
               if (!isAuth) {
                 throw new Error("not authorized");
               }
+
+              if((user.role != role) && user.role !== "ADMIN"){
+                throw new Error("you do not have access");
+              }
+              
               return resolve(source, args, context, info);
             };
             return fieldConfig;

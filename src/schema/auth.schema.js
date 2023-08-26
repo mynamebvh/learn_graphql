@@ -1,5 +1,5 @@
 const authSchema = `#graphql
-directive @auth on OBJECT | FIELD_DEFINITION
+directive @auth(role: Role = USER) on OBJECT | FIELD_DEFINITION
 enum Role {
   ADMIN
   USER
