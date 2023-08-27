@@ -18,12 +18,12 @@ type Query {
 }
 
 type Mutation {
+  login(username: String!, password: String!): Token!,
   signup(
     fullName: String!
     username: String!
     email: String!
     password: String!
-    role: String!
   ) : User!
 }
 `;

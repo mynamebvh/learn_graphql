@@ -1,20 +1,22 @@
 import ApiError from "../utils/ApiError.js";
 import prisma from "../client.js";
 
-const signup = async (userBody) => {
-  const user = await prisma.user.create({
-    data: {...userBody}
-  })
+const getAll = async() => {
+  return prisma.user.findMany({});
+}
+
+const getUserByAccount = async (account) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ username: account }, { email: account }],
+    },
+  });
 
   if (!user) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Can not create new user");
+    throw new ApiError(httpStatus.NOT_FOUND, "user does not exist");
   }
 
   return user;
 };
 
-const getAll = async() => {
-  return prisma.user.findMany({});
-}
-
-export default { signup, getAll };
+export default { getAll, getUserByAccount };

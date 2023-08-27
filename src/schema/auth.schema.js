@@ -4,6 +4,10 @@ enum Role {
   ADMIN
   USER
 }
+
+type Token {
+  accessToken: String!
+} 
 `;
 
 export default authSchema;
