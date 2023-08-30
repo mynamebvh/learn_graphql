@@ -1,11 +1,16 @@
 const userSchema = `#graphql
 scalar DateTime
 scalar UUID
+scalar Upload
+
+type Image {
+  id: String!
+  filename: String!
+}
 
 type User {
   id: UUID
   fullName: String!
-  password: String!
   username: String!
   email: String!
   role: String! 
@@ -24,7 +29,8 @@ type Mutation {
     username: String!
     email: String!
     password: String!
-  ) : User!
+  ) : User!,
+  uploadImage(image: Upload!): String
 }
 `;
 

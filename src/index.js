@@ -2,8 +2,10 @@ import { ApolloServer } from "@apollo/server";
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { expressMiddleware } from "@apollo/server/express4";
+import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import express from "express";
 import http from "http";
+import cors from 'cors'
 import pkg from "body-parser";
 
 const { json } = pkg;
@@ -28,7 +30,7 @@ schemaExec = authDirectiveTransformer(schemaExec);
 const server = new ApolloServer({
   schema: schemaExec,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  introspection: true
+  // introspection: true,
 });
 
 await server.start();
@@ -41,7 +43,9 @@ prisma.$connect().then(async() => {
 
 app.use(
   "/graphql",
+  cors(),
   json(),
+  graphqlUploadExpress({ maxFileSize: 100000 }),
   expressMiddleware(server, {
     context: async ({ req }) => {
       const auth = await protect(req);
