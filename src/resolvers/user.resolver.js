@@ -2,6 +2,8 @@ import fs from 'fs';
 import { tokenService, authService, userService } from "../services/index.js"
 import { DateTimeResolver, UUIDResolver } from 'graphql-scalars';
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
+import { PubSub } from 'graphql-subscriptions';
+const pubsub = new PubSub();
 
 export default {
   DateTime: DateTimeResolver,
@@ -21,8 +23,11 @@ export default {
     },
     signup: async(_, { fullName, password, username, email }, ctx) => {
       const user = await authService.signup({ fullName, password, username, email });
+      pubsub.publish('USER_CREATED', { userCreated: user }); 
       return user;
     },
+    // updateUser: async(_, { fullName, password, username, email }, ctx) => {},
+    // deleteuser: async(_, { fullName, password, username, email }, ctx) => {},
     uploadImage: async(_, { image } , ctx) => {
       const { filename, createReadStream } = await image;
       const targetDirectory = './src/uploads/';
@@ -38,6 +43,11 @@ export default {
       });
       
       return filename
+    }
+  },
+  Subscription: {
+    userCreated: {
+      subscribe: () => pubsub.asyncIterator(['USER_CREATED']),
     }
   }
 

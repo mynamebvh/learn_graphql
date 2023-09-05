@@ -1,5 +1,5 @@
 import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils";
-import { defaultFieldResolver } from "graphql";
+import { defaultFieldResolver, GraphQLError } from "graphql";
 
 function authDirective(directiveName) {
   const typeDirectiveArgumentMaps = {};
@@ -23,7 +23,9 @@ function authDirective(directiveName) {
             fieldConfig.resolve = function (source, args, context, info) {
               const { isAuth, user } = context;
               if (!isAuth) {
-                throw new Error("not authorized");
+                throw new GraphQLError("not authorized", {
+                  extensions: { code: "hi" }
+                });
               }
 
               if((user.role != role) && user.role !== "ADMIN"){

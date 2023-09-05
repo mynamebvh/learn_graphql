@@ -32,6 +32,10 @@ type Mutation {
   ) : User!,
   uploadImage(image: Upload!): String
 }
+
+type Subscription {
+  userCreated: User
+}
 `;
 
 export default userSchema;

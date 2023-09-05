@@ -2,6 +2,9 @@ import { ApolloServer } from "@apollo/server";
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { expressMiddleware } from "@apollo/server/express4";
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import express from "express";
 import http from "http";
@@ -18,6 +21,12 @@ import authDirectiveTransformer from './directives/auth.directive.js'
 
 const app = express();
 const httpServer = http.createServer(app);
+
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/graphql',
+});
+
 const { protect } = authMiddleware;
 
 let schemaExec = makeExecutableSchema({
@@ -25,21 +34,26 @@ let schemaExec = makeExecutableSchema({
   resolvers,
 });
 
+const serverCleanup = useServer({ schema: schemaExec }, wsServer);
 schemaExec = authDirectiveTransformer(schemaExec);
 
 const server = new ApolloServer({
   schema: schemaExec,
-  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  // introspection: true,
+  plugins: [
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();
+          },
+        };
+      },
+    },
+  ],
 });
 
 await server.start();
-
-prisma.$connect().then(async() => {
-  console.log('Connected to SQL Database');
-  await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
-});
 
 app.use(
   "/graphql",
@@ -54,4 +68,9 @@ app.use(
   })
 );
 
+prisma.$connect().then(async() => {
+  console.log('Connected to SQL Database');
+  await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+});
 
